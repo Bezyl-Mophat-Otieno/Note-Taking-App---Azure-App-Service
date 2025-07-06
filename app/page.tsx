@@ -102,7 +102,7 @@ export default function GoalTracker() {
   }, [goals, user])
 
   const handleLogin = () => {
-    window.location.href = "/api/.auth/login/aad"
+    window.location.href = "/.auth/login/aad"
   }
 
   const handleLogout = () => {
