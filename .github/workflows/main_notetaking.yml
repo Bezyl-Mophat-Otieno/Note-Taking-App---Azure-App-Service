@@ -1,4 +1,7 @@
-name: Build and deploy Next.js app to Azure Web App
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy Node.js app to Azure Web App - notetaking
 
 on:
   push:
@@ -8,34 +11,50 @@ on:
 
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
-  WEBAPP_NAME: "NOTES_TAKING_AZURE_APP"
+  WEBAPP_NAME: "NOTE_TAKER_WEB_APP"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: '22.x'
 
       - name: npm install, build, and test
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         run: |
           npm install --force
-          npm run build
+          npm run build --if-present
           mv ./build/static ./build/standalone/build
           mv ./public ./build/standalone
 
-      - name: "Deploy to Azure Web App"
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CE16A493BCEC4957A975918EE122D892 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F36D0DD8491A436F81E6C1DE57CD8F29 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CBCC9DD9DE7A40418012124A20C92093 }}
+
+      - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'notetaking'
-          slot-name: "Production"
-          publish-profile: ${{ secrets.APPLICATION_PUBLISH_PROFILE }}
-          package: ./build/standalone
+          slot-name: 'Production'
+          package: .
+          
