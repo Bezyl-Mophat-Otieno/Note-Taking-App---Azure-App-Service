@@ -4,13 +4,12 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     unoptimized: true,
   },
   reactStrictMode: true,
-  distDir: 'build',
   output: 'standalone'
 }
 

@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy Node.js app to Azure Web App - notetaking
+name: Build and deploy Next.js 15 app to Azure Web App
 
 on:
   push:
@@ -10,51 +7,67 @@ on:
   workflow_dispatch:
 
 env:
-  APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
-  WEBAPP_NAME: "NOTE_TAKER_WEB_APP"
+  WEBAPP_NAME: "NOTE_TAKER_APP_SERVICE"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '18.x'
 
-      - name: npm install, build, and test
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the Next.js app
+        run: npm run build
+
+      - name: Prepare deployment output
         run: |
-          npm install --force
-          npm run build --if-present
-          mv ./build/static ./build/standalone/build
-          mv ./public ./build/standalone
+          mkdir -p output
+          cp -R .next/standalone/* output/
+          cp -R .next/static output/.next/static
+          cp -R public output/public
+          cp package.json output/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-app
+          path: output
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: next-app
+          path: .
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CE16A493BCEC4957A975918EE122D892 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F36D0DD8491A436F81E6C1DE57CD8F29 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CBCC9DD9DE7A40418012124A20C92093 }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'notetaking'
+          app-name: ${{ env.WEBAPP_NAME }}
           slot-name: 'Production'
           package: .
-          
