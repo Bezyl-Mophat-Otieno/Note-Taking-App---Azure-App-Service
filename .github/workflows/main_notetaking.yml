@@ -32,11 +32,12 @@ jobs:
 
       - name: Prepare deployment output
         run: |
-          mkdir -p output
+          mkdir -p output/.next/static
           cp -R .next/standalone/* output/
-          cp -R .next/static output/.next/static
-          cp -R public output/public
+          [ -d .next/static ] && cp -R .next/static/* output/.next/static/
+          [ -d public ] && cp -R public output/public
           cp package.json output/
+      
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
