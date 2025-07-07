@@ -100,4 +100,4 @@ jobs:
         with:
           app-name: ${{ env.WEBAPP_NAME }}
           slot-name: 'Production'
-          package: next-app/
+          package: ./
