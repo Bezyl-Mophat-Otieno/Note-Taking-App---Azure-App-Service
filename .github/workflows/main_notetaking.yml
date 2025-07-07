@@ -54,10 +54,6 @@ jobs:
           echo ""
           echo "==================== 📦 Deployment Output Structure ===================="
           echo ""
-          echo "✅ Step 1: Showing all files recursively in 'output/'..."
-          find output -type f | sort
-      
-          echo ""
           echo "✅ Step 2: Showing tree structure of 'output/'..."
           if ! command -v tree &> /dev/null; then
             echo "📦 Installing 'tree' package..."
