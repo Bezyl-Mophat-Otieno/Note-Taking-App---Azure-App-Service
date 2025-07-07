@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  WEBAPP_NAME: "NOTE_TAKER_APP_SERVICE"
+  WEBAPP_NAME: "notetaking"
 
 jobs:
   build:
