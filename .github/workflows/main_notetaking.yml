@@ -25,7 +25,7 @@ jobs:
           node-version: '22.x'
 
       - name: Install dependencies
-        run: npm install  --force
+        run: npm install --force
 
       - name: Build the Next.js app
         run: npm run build
@@ -33,65 +33,46 @@ jobs:
       - name: Prepare deployment output
         run: |
           mkdir -p output/.next/static
-          
-          # Copy compiled standalone server (includes server.js and app code)
+
+          echo "Copying standalone files..."
           cp -R .next/standalone/* output/
-          
-          # Copy static files generated during build
+
+          echo "Copying static assets..."
           cp -R .next/static output/.next/static
-          
-          # Copy build identifier (required by Next.js server to run)
+
+          echo "Copying BUILD_ID..."
           cp .next/BUILD_ID output/.next/BUILD_ID
-          
-          # Optional: if you serve static files from /public
+
+          echo "Copying public directory (if exists)..."
           [ -d public ] && cp -R public output/public
-          
-          # Copy package.json so Azure knows how to start the app
+
+          echo "Copying package.json..."
           cp package.json output/
 
       - name: Inspect and validate deployment output
         run: |
+          echo "==================== 📁 Deployment Output ===================="
+          sudo apt-get update && sudo apt-get install tree -y
+          tree output || echo "⚠️ 'tree' not available"
+
           echo ""
-          echo "==================== 📦 Deployment Output Structure ===================="
-          echo ""
-          echo "✅ Step 2: Showing tree structure of 'output/'..."
-          if ! command -v tree &> /dev/null; then
-            echo "📦 Installing 'tree' package..."
-            sudo apt-get update -y && sudo apt-get install tree -y
-          fi
-          tree output || echo "⚠️ 'tree' not available, skipping..."
-      
-          echo ""
-          echo "==================== 🧪 Critical File Checks ===================="
-          
-          echo "- Checking: server.js"
+          echo "==================== ✅ Critical File Checks ===================="
           test -f output/server.js && echo "✅ Found: server.js" || (echo "❌ Missing: server.js" && exit 1)
-      
-          echo "- Checking: output/.next/BUILD_ID"
-          test -f output/.next/BUILD_ID && echo "✅ Found: .next/BUILD_ID" || (echo "❌ Missing: .next/BUILD_ID" && exit 1)
-      
-          echo "- Checking: output/.next/static/"
+          test -f output/.next/BUILD_ID && echo "✅ Found: .next/BUILD_ID" || (echo "❌ Missing: BUILD_ID" && exit 1)
           test -d output/.next/static && echo "✅ Found: .next/static/" || (echo "❌ Missing: .next/static/" && exit 1)
-      
-          echo "- Checking: package.json"
           test -f output/package.json && echo "✅ Found: package.json" || (echo "❌ Missing: package.json" && exit 1)
-      
-          echo "- Checking: optional public/ folder"
           if [ -d output/public ]; then
             echo "✅ Found: public/"
           else
             echo "⚠️ Skipping: public/ not found (optional)"
           fi
-      
-          echo ""
-          echo "✅ All required files are in place. Proceeding to deployment."
-      
+          echo "✅ All required files are present. Ready for deployment."
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: next-app
-          path: output
+          path: output/
 
   deploy:
     runs-on: ubuntu-latest
@@ -119,4 +100,4 @@ jobs:
         with:
           app-name: ${{ env.WEBAPP_NAME }}
           slot-name: 'Production'
-          package: output/
+          package: next-app/
