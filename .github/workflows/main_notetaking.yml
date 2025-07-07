@@ -33,9 +33,20 @@ jobs:
       - name: Prepare deployment output
         run: |
           mkdir -p output/.next/static
+          
+          # Copy compiled standalone server (includes server.js and app code)
           cp -R .next/standalone/* output/
-          [ -d .next/static ] && cp -R .next/static/* output/.next/static/
+          
+          # Copy static files generated during build
+          cp -R .next/static output/.next/static
+          
+          # Copy build identifier (required by Next.js server to run)
+          cp .next/BUILD_ID output/.next/BUILD_ID
+          
+          # Optional: if you serve static files from /public
           [ -d public ] && cp -R public output/public
+          
+          # Copy package.json so Azure knows how to start the app
           cp package.json output/
       
 
