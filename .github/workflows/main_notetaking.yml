@@ -48,6 +48,47 @@ jobs:
           
           # Copy package.json so Azure knows how to start the app
           cp package.json output/
+
+      - name: Inspect and validate deployment output
+        run: |
+          echo ""
+          echo "==================== 📦 Deployment Output Structure ===================="
+          echo ""
+          echo "✅ Step 1: Showing all files recursively in 'output/'..."
+          find output -type f | sort
+      
+          echo ""
+          echo "✅ Step 2: Showing tree structure of 'output/'..."
+          if ! command -v tree &> /dev/null; then
+            echo "📦 Installing 'tree' package..."
+            sudo apt-get update -y && sudo apt-get install tree -y
+          fi
+          tree output || echo "⚠️ 'tree' not available, skipping..."
+      
+          echo ""
+          echo "==================== 🧪 Critical File Checks ===================="
+          
+          echo "- Checking: server.js"
+          test -f output/server.js && echo "✅ Found: server.js" || (echo "❌ Missing: server.js" && exit 1)
+      
+          echo "- Checking: output/.next/BUILD_ID"
+          test -f output/.next/BUILD_ID && echo "✅ Found: .next/BUILD_ID" || (echo "❌ Missing: .next/BUILD_ID" && exit 1)
+      
+          echo "- Checking: output/.next/static/"
+          test -d output/.next/static && echo "✅ Found: .next/static/" || (echo "❌ Missing: .next/static/" && exit 1)
+      
+          echo "- Checking: package.json"
+          test -f output/package.json && echo "✅ Found: package.json" || (echo "❌ Missing: package.json" && exit 1)
+      
+          echo "- Checking: optional public/ folder"
+          if [ -d output/public ]; then
+            echo "✅ Found: public/"
+          else
+            echo "⚠️ Skipping: public/ not found (optional)"
+          fi
+      
+          echo ""
+          echo "✅ All required files are in place. Proceeding to deployment."
       
 
       - name: Upload build artifact
