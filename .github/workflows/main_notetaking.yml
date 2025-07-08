@@ -33,28 +33,27 @@ jobs:
       - name: Prepare deployment output
         run: |
           mkdir -p output/.next/static
-
+          
           echo "Copying standalone files..."
           cp -R .next/standalone/* output/
-
+          
           echo "Copying static assets..."
           cp -R .next/static output/.next/static
-
+          
           echo "Copying BUILD_ID..."
           cp .next/BUILD_ID output/.next/BUILD_ID
-
+          
           echo "Copying public directory (if exists)..."
           [ -d public ] && cp -R public output/public
-
+          
           echo "Copying package.json..."
-          cp package.json output/
+          cp package.json output/package.json
 
       - name: Inspect and validate deployment output
         run: |
           echo "==================== 📁 Deployment Output ===================="
           sudo apt-get update && sudo apt-get install tree -y
           tree output || echo "⚠️ 'tree' not available"
-
           echo ""
           echo "==================== ✅ Critical File Checks ===================="
           test -f output/server.js && echo "✅ Found: server.js" || (echo "❌ Missing: server.js" && exit 1)
@@ -100,4 +99,4 @@ jobs:
         with:
           app-name: ${{ env.WEBAPP_NAME }}
           slot-name: 'Production'
-          package: ./
+          package: ./next-app
